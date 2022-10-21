@@ -1,10 +1,14 @@
-import {useRef,useState, useEffect, useContext} from 'react';
-import AuthContext from './context/AuthProvider';
+import {useRef,useState, useEffect} from 'react';
+import useAuth from './hooks/useAuth';
+import { useNavigate, useLocation} from "react-router-dom"
 import * as api from "./Api";
 
 
 const Login =()=>{
-    const {setAuth} = useContext(AuthContext);
+    const {setAuth} = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/";
     const userRef = useRef();
     const errRef = useRef();
 
@@ -25,37 +29,21 @@ const Login =()=>{
     const handleSubmit = async(e)=>{ //will handle the event
         e.preventDefault(); //stop from reloading page 
         //console.log(user,pwd);
-        try{const res = await api.login(JSON.stringify({user, pwd}));
+        const res = await api.login(JSON.stringify({user, pwd}));
         console.log(JSON.stringify(res?.data))
         setAuth({user,pwd})
-        setUser('');
-        setPwd('');
-        setSuccess(res.true)
-        
-    }
-    catch(err){
-        if(!err?.res){
-            setErrMsg("No Server Response")
-        }
-    }
-        
+        setErrMsg(res.error||null)
+        //setUser('');
+        //setPwd('');
+        navigate(from, { replace: true });
         
 
-
+        
+ 
     }
-
-
+    
     return(
-        <>
-        {success? (
-            <section>
-                <h1>You are logged in</h1>
-                <br />
-                <p>
-                    <a href="#"> Go to Home</a>
-                </p>
-            </section>
-        ) : (
+        
         
         <section>
             <p ref= {errRef} className={errMsg? "errmsg":"offscreen"} aria-live="assertive"> {/*display the error messages*/}
@@ -87,13 +75,12 @@ const Login =()=>{
                 Need an Account? <br />
                 <span className='line'>
                     {/*putting a router link*/}
-                    <a href ="#">Sign Up</a>
+                    <a href ="/register">Sign Up</a>
                 </span>
             </p>
 
         </section>
-        )}
-        </>
+        
     )
 }
 
